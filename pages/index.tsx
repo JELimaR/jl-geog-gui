@@ -7,7 +7,7 @@ const Home: NextPage = () => {
 		<div>
 			<Layout name='home'>
 				<p>P</p>
-				<p><Link href='mapa'>mapa</Link></p>
+				<p><Link href='test'>test</Link></p>
         <p><Link href='start'>Start</Link></p>
 			</Layout>
 		</div>

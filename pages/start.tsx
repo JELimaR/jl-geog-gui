@@ -1,11 +1,13 @@
 import { NextPage } from "next";
-import { useEffect, useState } from "react";
-import useSWR from 'swr';
+import { useRouter } from "next/router";
+import { ChangeEvent, useEffect, useState } from "react";
 import Layout from "../components/layout";
+import useFetch from "../hooks/useFetch";
 import { useForm } from "../hooks/useForm";
 import MapController from "../Logic/MapController";
 
-const configUrl = 'https://port-3002-nodejs-jl-geog-juanlr07645071.preview.codeanywhere.com';
+// const configUrl = 'https://port-3002-nodejs-jl-geog-juanlr07645071.preview.codeanywhere.com';
+const configUrl = 'http://localhost:4000';
 
 interface IFormData {
   folder: string;
@@ -17,11 +19,7 @@ type TypeData = {
   areaOptions: number[];
 }
 
-function fetcher<T>(input: RequestInfo, init?: RequestInit | undefined): Promise<T> {
-  console.log(init)
-  return fetch(`${configUrl}/config/azgaar-options`, init
-).then((res: Response) => res.json());
-};
+const areaOptions = [12100, 8100, 4100, 2100, 810];
 
 const Start = (/*props: IConfigProps*/) => {
 
@@ -30,75 +28,77 @@ const Start = (/*props: IConfigProps*/) => {
     area: 0,
   }
   const { formData, onChange, setFormValue } = useForm<IFormData>(initData);
+  
+  const [azgOpts, setAzgOpts] = useState<string[]>([])
+  const [isLoading, setLoading] = useState(false)
 
-  const { data, error } = useSWR<TypeData>(`${configUrl}/config/azgaar-options`,
-    () => fetcher(`${configUrl}/config/azgaar-options`, {
+  const router = useRouter();
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`${configUrl}/config/azgaar-options`,  {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://port-3000-nodejs-jl-geog-juanlr07645071.preview.codeanywhere.com',
         'Accept': "*/*",
         credentials: 'include',
       },
-    }));
-
-  useEffect(() => {
-    if (!!data) {
-      console.log(data);
-      // setFormValue({
-      //   folder: data.folderOptions[0],
-      //   area: data.areaOptions[0]
-      // })
-    }
-  }, [data]);
-
-  const [state, setState] = useState<string | undefined>(undefined);
+    })
+      .then((res: Response) => res.json())
+      .then((data: string[]) => {
+        setAzgOpts(data)
+        setLoading(false)
+      })
+  }, []);
 
   const handleCreateClick = async (e: any) => {
-    // e.preventDefault();
-    setState(formData.folder)
-    console.log('form data', formData);
+    e.preventDefault();
 
-    // const resFolder: Response = await fetch('/api/building/config/azgaar-folder', {
     const resFolder: Response = await fetch(`${configUrl}/config/azgaar-options`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        folderSelected: formData.folder,
+        selected: formData.folder,
       })
     })
+    console.log(resFolder)
 
-    const resCreate: Response = await fetch(`${configUrl}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        area: formData.area,
+    if (resFolder.status === 201) {
+      const resCreate: Response = await fetch(`${configUrl}/config/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          area: +formData.area,
+        })
       })
-    })
+      console.log(resCreate) 
+
+      if (resCreate.status === 201) {
+        router.push('/test')
+      }
+    }
+
   }
 
-  if (error)
-    return <Layout name="config"><div>Failed to load</div></Layout>
-  if (!data) 
+  if (isLoading) 
     return <Layout name="config"><div>Loading...</div></Layout>
+  if (azgOpts.length == 0)
+    return <Layout name="config"><div>Failed to load</div></Layout>
 
   return (
     <div>
       <Layout name="config">
-        {
-          state && <h5>{state}</h5>
-        }
         <h1>Config</h1>
         <form>
           <div>
             <label htmlFor="folder">Azgr Folder Selection:</label>
-            <select id="folder" name="folder" onChange={(e) => onChange(e.target.value, 'folder')} value={formData.folder}>
+            <select id="folder" name="folder" onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(e.target.value, 'folder')} value={formData.folder}>
               {
-                data.folderOptions.map((fol: string, idx: number) => <option key={idx} value={fol}>{fol}</option>)
+                azgOpts.map((fol: string, idx: number) => <option key={idx} value={fol}>{fol}</option>)
               }
             </select>
           </div>
@@ -106,9 +106,8 @@ const Start = (/*props: IConfigProps*/) => {
             <label htmlFor="area">Area media selection:</label>
             <select id="area" name="area" onChange={(e) => onChange(e.target.value, 'area')} value={formData.area}>
               {
-                data.areaOptions.map((a: number, idx: number) => <option key={idx} value={a}>{a}</option>)
+                areaOptions.map((a: number, idx: number) => <option key={idx} value={a}>{a}</option>)
               }
-
             </select>
           </div>
           <div>
