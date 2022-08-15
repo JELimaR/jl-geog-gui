@@ -33,3 +33,12 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+.vscode/*
+public/data/*
+public/AzgaarData/*
+
+package-lock.json
+
+*.png
+*.jpeg
