@@ -1,4 +1,4 @@
-import { TypePan, TypeZoom } from '../hooks/useSVGNavigation';
+import { TypePan, TypeZoom } from '../../hooks/useSVGNavigation';
 
 interface ISVGNavigationComponentProps {
   handleZoom: (tz: TypeZoom) => void;

@@ -18,9 +18,6 @@ export const configSlice = createSlice({
     folderSelected: (state: IConfigState, action: PayloadAction<string>) => {
       state.selected = action.payload;
     },
-    backDayCalendar: (state: IConfigState) => {
-      
-    },
   },
 });
 

@@ -4,10 +4,10 @@ import { ChangeEvent, useEffect, useState } from "react";
 import Layout from "../components/layout";
 import useFetch from "../hooks/useFetch";
 import { useForm } from "../hooks/useForm";
-import MapController from "../Logic/MapController";
 
-// const configUrl = 'https://port-3002-nodejs-jl-geog-juanlr07645071.preview.codeanywhere.com';
-const configUrl = 'http://localhost:4000';
+// const configUrl = 'https://port-4000-nodejs-jl-geog-juanlr07645071.preview.codeanywhere.com';
+// const configUrl = 'http://localhost:4000';
+const configUrl = '/api';
 
 interface IFormData {
   folder: string;
@@ -28,7 +28,7 @@ const Start = (/*props: IConfigProps*/) => {
     area: 0,
   }
   const { formData, onChange, setFormValue } = useForm<IFormData>(initData);
-  
+
   const [azgOpts, setAzgOpts] = useState<string[]>([])
   const [isLoading, setLoading] = useState(false)
 
@@ -36,7 +36,7 @@ const Start = (/*props: IConfigProps*/) => {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`${configUrl}/config/azgaar-options`,  {
+    fetch(`${configUrl}/config/azgaar-options`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -48,11 +48,20 @@ const Start = (/*props: IConfigProps*/) => {
       .then((data: string[]) => {
         setAzgOpts(data)
         setLoading(false)
+        setFormValue({
+          folder: data[0],
+          area: areaOptions[0]
+        })
+      })
+      .catch((e: any) => {
+        console.log(e);
       })
   }, []);
 
   const handleCreateClick = async (e: any) => {
     e.preventDefault();
+
+    console.log(formData)
 
     const resFolder: Response = await fetch(`${configUrl}/config/azgaar-options`, {
       method: 'POST',
@@ -75,7 +84,7 @@ const Start = (/*props: IConfigProps*/) => {
           area: +formData.area,
         })
       })
-      console.log(resCreate) 
+      console.log(resCreate)
 
       if (resCreate.status === 201) {
         router.push('/test')
@@ -84,38 +93,36 @@ const Start = (/*props: IConfigProps*/) => {
 
   }
 
-  if (isLoading) 
+  if (isLoading)
     return <Layout name="config"><div>Loading...</div></Layout>
   if (azgOpts.length == 0)
     return <Layout name="config"><div>Failed to load</div></Layout>
 
   return (
-    <div>
-      <Layout name="config">
-        <h1>Config</h1>
-        <form>
-          <div>
-            <label htmlFor="folder">Azgr Folder Selection:</label>
-            <select id="folder" name="folder" onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(e.target.value, 'folder')} value={formData.folder}>
-              {
-                azgOpts.map((fol: string, idx: number) => <option key={idx} value={fol}>{fol}</option>)
-              }
-            </select>
-          </div>
-          <div>
-            <label htmlFor="area">Area media selection:</label>
-            <select id="area" name="area" onChange={(e) => onChange(e.target.value, 'area')} value={formData.area}>
-              {
-                areaOptions.map((a: number, idx: number) => <option key={idx} value={a}>{a}</option>)
-              }
-            </select>
-          </div>
-          <div>
-            <button onClick={handleCreateClick}>Create</button>
-          </div>
-        </form>
-      </Layout>
-    </div>
+    <Layout name="config">
+      <h1>Config</h1>
+      <form>
+        <div>
+          <label htmlFor="folder">Azgr Folder Selection:</label>
+          <select id="folder" name="folder" onChange={(e: ChangeEvent<HTMLSelectElement>) => onChange(e.target.value, 'folder')} value={formData.folder}>
+            {
+              azgOpts.map((fol: string, i: number) => <option key={i} value={fol}>{fol}</option>)
+            }
+          </select>
+        </div>
+        <div>
+          <label htmlFor="area">Area media selection:</label>
+          <select id="area" name="area" onChange={(e) => onChange(e.target.value, 'area')} value={formData.area}>
+            {
+              areaOptions.map((a: number, i: number) => <option key={i} value={a}>{a}</option>)
+            }
+          </select>
+        </div>
+        <div>
+          <button onClick={handleCreateClick}>Create</button>
+        </div>
+      </form>
+    </Layout>
   )
 }
 

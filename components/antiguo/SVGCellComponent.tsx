@@ -1,6 +1,6 @@
-import IDrawingParameters from '../Logic/AbstractDrawing/IDrawingParameters';
-import Point from '../Logic/BuildingModel/Geom/Point';
-import JCell from '../Logic/BuildingModel/Voronoi/JCell';
+import IDrawingParameters from '../../Logic/AbstractDrawing/IDrawingParameters';
+import Point from '../../Logic/BuildingModel/Geom/Point';
+import JCell from '../../Logic/BuildingModel/Voronoi/JCell';
 
 
 interface ISVGCellComponentProps {

@@ -5,17 +5,14 @@ interface State<T> {
   error?: Error
 }
 
-type Cache<T> = { [url: string]: T }
-
 // discriminated union type
 type Action<T> =
   | { type: 'loading' }
   | { type: 'fetched'; payload: T }
   | { type: 'error'; payload: Error }
 
-function useFetch<T = unknown>(url?: string, options?: RequestInit): State<T> {
-  const cache = useRef<Cache<T>>({})
-
+function useFetch<T = unknown>(url: string, options: RequestInit): State<T> {
+  
   // Used to prevent state update if the component is unmounted
   const cancelRequest = useRef<boolean>(false)
 
@@ -41,19 +38,11 @@ function useFetch<T = unknown>(url?: string, options?: RequestInit): State<T> {
   const [state, dispatch] = useReducer(fetchReducer, initialState)
 
   useEffect(() => {
-    // Do nothing if the url is not given
-    if (!url) return
 
     cancelRequest.current = false
 
     const fetchData = async () => {
       dispatch({ type: 'loading' })
-
-      // If a cache exists for this url, return it
-      if (cache.current[url]) {
-        dispatch({ type: 'fetched', payload: cache.current[url] })
-        return
-      }
 
       try {
         const response = await fetch(url, options)
@@ -62,7 +51,6 @@ function useFetch<T = unknown>(url?: string, options?: RequestInit): State<T> {
         }
 
         const data = (await response.json()) as T
-        cache.current[url] = data
         if (cancelRequest.current) return
 
         dispatch({ type: 'fetched', payload: data })
@@ -80,7 +68,6 @@ function useFetch<T = unknown>(url?: string, options?: RequestInit): State<T> {
     return () => {
       cancelRequest.current = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   return state;

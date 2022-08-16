@@ -1,42 +1,35 @@
-import chroma from 'chroma-js';
-import SVGCellComponent from './SVGCellComponent';
+import React, { ReactNode } from 'react';
 
-import useSVGNavigation from '../hooks/useSVGNavigation';
-import SVGNavigationComponent from './SVGNavigationComponent';
-import SVGDrawingMap from '../Logic/SVGDrawing/SVGDrawingMap';
-import Point from '../Logic/BuildingModel/Geom/Point';
-import JCell from '../Logic/BuildingModel/Voronoi/JCell';
-import React from 'react';
-// import axios from 'axios';
+export class Viewbox {
+  constructor(
+    private _xmin: number,
+    private _ymin: number,
+    private _xmax: number,
+    private _ymax: number,
+  ) { }
 
+  get xmin(): number { return this._xmin }
+  get ymin(): number { return this._ymin }
 
-const colorScale: chroma.Scale = chroma.scale('Spectral').domain([1, 0]);
+  get xwin(): number { return this._xmax - this._xmin }
+  get ywin(): number { return this._ymax - this._ymin }
 
-const sdm: SVGDrawingMap = new SVGDrawingMap(new Point(360, 180));
+  getString(): string {
+    return `${this._xmin} ${this._ymin} ${this.xwin} ${this.ywin}`
+  }
+}
 
 interface ISVGComponentProps {
-  SIZE: Point;
-  handleClickFunc: (p: Point) => void;
-	cellArr: JCell[];
+  handleClickFunc: (p: SVGPoint) => void;
+  children: ReactNode[];
+  viewbox: Viewbox;
+  hrefImage?: string;
+  size: {
+    width: number;
+    height: number;
+  }
 }
 const SVGComponent = (props: ISVGComponentProps) => {
-  let navigation = useSVGNavigation(sdm.panzoom);
-  // const [cellArr, setCellArr] = useState<JCell[]>([]);
-
-  /*
-  console.log(panzoom);
-  console.log(panzoom.scale);
-  console.log(
-    'pointsBuffCenterLimits',
-    panzoom.pointsBuffCenterLimits.map((p: JPoint) => p.toSVGString())
-  );
-  console.log(
-    'pointsBuffDrawLimits',
-    panzoom.pointsBuffDrawLimits.map((p: JPoint) => p.toSVGString())
-  );
-  */
-
-  // const cellArr: JCell[] = [...jwm.diagram.cells.values()];
 
   const handleClickInSVG = (e: any /*React.MouseEvent<SVGElement>*/) => {
     e.preventDefault();
@@ -44,61 +37,30 @@ const SVGComponent = (props: ISVGComponentProps) => {
     pt.x = e.clientX;
     pt.y = e.clientY;
     let cursorpt = pt.matrixTransform(e.currentTarget.getScreenCTM().inverse());
-    props.handleClickFunc(new Point(cursorpt.x, cursorpt.y));
+    // console.log(cursorpt)
+    props.handleClickFunc(cursorpt);
   };
 
   return (
-    <React.Fragment>
-      <svg
-        viewBox={navigation.viewBox}
-        width={props.SIZE.x}
-        height={props.SIZE.y}
-        onDoubleClick={navigation.handleDoubleClick}
-        onClick={handleClickInSVG}
-        onWheel={navigation.handleWheel}
-      >
-        <polygon points="-180,-90 -180,90 180,90 180,-90 " fill={'#00000010'} />
-        {props.cellArr.map((cell: JCell) => {
-          /*
-          if (!sdm.panzoom.isCellIn(cell)) {
-            return;
-          }
-          */
-          return (
-            <SVGCellComponent
-              key={cell.id}
-              cell={cell}
-              func={(cell: JCell) => {
-                // let h = Math.round(cell.height * 20) / 20;
-                const color = chroma.random().hex();
-                return {
-                  fillColor: color,
-                  strokeColor: color,
-                };
-              }}
-            />
-          );
-        })}
-        {/*<polygon
-        points={panzoom.pointsBuffDrawLimits
-          .map((p: JPoint) => p.toSVGString())
-          .join(' ')}
-        fill={'none'}
-        stroke={'#FF0000'}
-        />*/}
-        {/*<polygon
-        points={panzoom.pointsBuffCenterLimits
-          .map((p: JPoint) => p.toSVGString())
-          .join(' ')}
-        fill={'none'}
-        stroke={'#0000FF'}
-        />*/}
-      </svg>
-      <SVGNavigationComponent
-        handlePan={navigation.handlePanButtons}
-        handleZoom={navigation.handleZoomButtons}
-      />
-    </React.Fragment>
+    <svg
+      viewBox={props.viewbox.getString()}
+      width={props.size.width}
+      height={props.size.height}
+      onClick={handleClickInSVG}
+    >
+      <polygon points="-180,-90 -180,90 180,90 180,-90 " fill={'#00000010'} />
+      {
+        props.hrefImage &&
+        <image
+          x={props.viewbox.xmin}
+          y={props.viewbox.ymin}
+          width={props.viewbox.xwin}
+          height={props.viewbox.ywin}
+          href={props.hrefImage}
+        />
+      }
+      {props.children}
+    </svg>
   );
 };
 
